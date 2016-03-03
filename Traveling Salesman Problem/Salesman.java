@@ -36,6 +36,7 @@ public class Salesman{
 		bw.write(Integer.toString(result[nodes_num - 1] + 1));
 		bw.newLine();
 		bw.write(Integer.toString(result[0]));
+		bw.newLine();
 		bw.flush();
 		bw.close();
 	}
