@@ -25,46 +25,43 @@ public class Salesman{
 				adjacency_matrix[i][j] = Integer.parseInt(string_elements[j]);
 			}
 		}
-		int[] result = new int[nodes_num];
+		br.close();
+		int[] result = new int[nodes_num]; // result[0] stores the length. The other nodes_num - 1 elements stores the path, excluding 1 since 1 is always at the beginning and the end.
 		result = dp_salesman(nodes_num, adjacency_matrix);
 		bw.write("1 ");
 		for (i = 1; i < nodes_num - 1; i++){
-			bw.write(Integer.toString(result[i] + 1));
+			bw.write(Integer.toString(result[i] + 1)); // The nodes in result[] are from 0 to nodes_num - 1, so that here we add 1.
 			bw.write(" ");
 		}
 		bw.write(Integer.toString(result[nodes_num - 1] + 1));
 		bw.newLine();
 		bw.write(Integer.toString(result[0]));
 		bw.flush();
+		bw.close();
 	}
 
+	// dp_salesman() uses bottom up method of dynamic programming. Two main ideas are as follows.
+	// First, use stacks for to represent W. Second, use a fixed order to store nodes in W and fetch nodes by calculating indices.
 	private static int[] dp_salesman(int nodes_num, int[][] adjacency_matrix){
-		int[] results = new int[nodes_num]; // The first element in results[] is the length, the followings are the path
-		int i, j, k, ii, t, u, v, vv, r, rr, tt = 0;
-		int result_temp = 0;
-		int[][][] length = new int[nodes_num - 1][][];
-		int[][][] path = new int[nodes_num - 1][][];
+		int[] results = new int[nodes_num]; // Corresponds to result[] in the main() function.
+		int i, j, k, ii, t, v, vv, r, rr, tt = 0; // Auxiliary variables.
+		int[][][] length = new int[nodes_num - 1][][]; // Stores the lengths.
+		int[][][] path = new int[nodes_num - 1][][]; // Stores the paths of the shortest lengths.
 		int W_var_num = 1; // The number of different W variables.
-		int[] W_flag = new int[nodes_num];
-		Stack nodes_stack = new Stack();
-		Stack nodes_stack_temp = new Stack();
-		Stack result_stack = new Stack();
-		int node_temp = 0;
-		int last_num = 0;
-		int min_dist = 0;
-		int w_node = 0;
-		int w_counter = 0;
-		int stack_size = 0;
-		int[][] stack_storage = new int[nodes_num - 1][];
-		int[][] stack_storage_reduc = new int[nodes_num - 1][];
-		int prev_table_index = 0;
-		int prev_node = 0;
-		int[] result_flag = new int[nodes_num - 1];
-		int result_prev = 0;
-		int min_prev = 0;
-		int w_counter_index = 0;
-		int[] w_counter_flag = new int[nodes_num - 1];
-		int w_counter_temp = 0;
+		int[] W_flag = new int[nodes_num]; // Used to denote whether a node is in W. 0 represents that the node is not in W
+		Stack<Integer> nodes_stack = new Stack<Integer>(); // Stores current W.
+		Stack<Integer> nodes_stack_temp = new Stack<Integer>(); // Used to help operations on nodes_stack.
+		int node_temp = 0; // Auxiliary variable used in stack operations.
+		int last_num = 0; // An essential variable used for W changing.
+		int min_dist = 0; // Denotes distance(v', W - {v'})
+		int w_node = 0; // Denotes v'.
+		int w_counter = 0; // A counter used to represent indices for length[][][] and path[][][].
+		int[][] stack_storage = new int[nodes_num - 1][]; // Denotes the nodes in W. Used to compare with v' for index calculating.
+		int stack_storage_prev = 0; // Auxiliary variable used for calculating indices.
+		int prev_table_index = 0; // The index of the current W in the previous table. That is, at i - 1.
+		int prev_node = 0; // Auxiliary variable used for calculating path[][][].
+		int[] result_flag = new int[nodes_num - 1]; // Denotes whether a node has been visited. 0 represents not been visited.
+		int result_prev = 0; // Auxiliary variable used for calculating indices in the path finding process.
 		for (i = 1; i <= nodes_num - 1; i++){
 			W_var_num = C_n_m(nodes_num - 1, i);
 			length[i - 1] = new int[nodes_num][W_var_num];
@@ -73,7 +70,6 @@ public class Salesman{
 			w_counter = 0;
 			nodes_stack.push(1);
 			stack_storage[i - 1] = new int[i];
-			stack_storage_reduc[i - 1] = new int[i];
 			while (!(nodes_stack.size() == 0 && last_num == nodes_num - i)){
 				ii = last_num + 1;
 				while (nodes_stack.size() < i){
@@ -81,7 +77,7 @@ public class Salesman{
 					ii = ii + 1;
 				}
 				for (j = 0; j < nodes_num; j++){
-					W_flag[j] = 0; // 0 denotes that the node is not in W
+					W_flag[j] = 0; // 
 				}
 				for (j = 0; j < i; j++){
 					node_temp = (Integer) nodes_stack.pop();
@@ -94,7 +90,7 @@ public class Salesman{
 					nodes_stack.push(node_temp);
 				}
 				for (j = 0; j < nodes_num; j++){
-					if (W_flag[j] == 0){ // Here j denotes v. j <--> v. nodes_stack <--> W.
+					if (W_flag[j] == 0){ // Here i --> table index, j --> v, nodes_stack --> W.
 						if (i == 1){
 							w_node = (Integer) nodes_stack.pop();
 							nodes_stack.push(w_node);
@@ -103,28 +99,20 @@ public class Salesman{
 						}
 						else{
 							nodes_stack_temp.clear();
-							stack_size = nodes_stack.size();
-							for (k = 0; k < nodes_num - 1; k++){
-								w_counter_flag[k] = 0;
-							}
-							for (k = 0; k < stack_size; k++){
-								w_node = (Integer) nodes_stack.pop();
+							for (k = 0; k < i; k++){
+								w_node = (Integer) nodes_stack.pop(); // Here w_node --> v'.
 								nodes_stack_temp.push(w_node);
-								w_counter_flag[w_node - 1] = 1;
-								for (v = 0; v < i; v++){
-									stack_storage_reduc[i - 1][v] = 0;
-								}
 								prev_table_index = 0;
 								vv = 0;
 								for (v = 0; v < i; v++){
 									if (stack_storage[i - 1][v] != w_node){
 										if (vv == 0){
 											prev_table_index = prev_table_index + sum_C_n_m(nodes_num - 2, i - 1 - 1 - vv, stack_storage[i - 1][v] - 1);
-											stack_storage_reduc[i - 1][vv] = stack_storage[i - 1][v];
+											stack_storage_prev = stack_storage[i - 1][v];
 										}
 										else{
-											stack_storage_reduc[i - 1][vv] = stack_storage[i - 1][v];
-											prev_table_index = prev_table_index + sum_C_n_m(nodes_num - 2 - stack_storage_reduc[i - 1][vv - 1], i - 1 - 1 - vv, stack_storage_reduc[i - 1][vv] - 1 - stack_storage_reduc[i - 1][vv - 1]);
+											prev_table_index = prev_table_index + sum_C_n_m(nodes_num - 2 - stack_storage_prev, i - 1 - 1 - vv, stack_storage[i - 1][v] - 1 - stack_storage_prev);
+											stack_storage_prev = stack_storage[i - 1][v];
 										}
 										vv = vv + 1;
 									}
@@ -138,27 +126,11 @@ public class Salesman{
 									prev_node = w_node;
 								}
 							}
-							for (k = 0; k < stack_size; k++){
+							for (k = 0; k < i; k++){
 								nodes_stack.push((Integer) nodes_stack_temp.pop());
 							}
 							length[i - 1][j][w_counter] = min_dist;
 							path[i - 1][j][w_counter] = prev_node;
-//							w_counter_index = 0;
-//							vv = 0;
-//							for (v = 0; v < nodes_num - 1; v++){
-//								if (w_counter_flag[v] == 1){
-//									if (vv == 0){
-//										w_counter_index = w_counter_index + sum_C_n_m(nodes_num - 2, (i + 1) - 2 - vv, (v + 1) - 1);
-//										w_counter_temp = v + 1;
-//									}
-//									else{
-//										w_counter_index = w_counter_index + sum_C_n_m(nodes_num - 2 - w_counter_temp, (i + 1) - 2 - vv, (v + 1) - 1 - w_counter_temp);
-//										w_counter_temp = v + 1;
-//									}
-//									vv = vv + 1;
-//								}
-//							}
-//							path[i - 1][w_counter_index] = prev_node;
 						}
 					}
 				}
@@ -199,17 +171,10 @@ public class Salesman{
 				}
 			}
 		}
-		for (result_temp = 0; result_temp < nodes_num; result_temp ++){
-			if (result_temp == 0){
-				System.out.println(Integer.toString(results[result_temp]));
-			}
-			else{
-				System.out.println(Integer.toString(results[result_temp] + 1));
-			}
-		}
 		return results;
 	}
 	
+	// C_n_m is a function to compute number of permutations which choose m elements from n elements
 	private static int C_n_m(int n, int m){
 		int result = 1;
 		int i = 0;
@@ -225,6 +190,7 @@ public class Salesman{
 		return result;
 	}
 
+	// sum_C_n_m is a function to compute the interval 
 	private static int sum_C_n_m(int collection_space, int ini_collection_num, int loop_num){
 		int result = 0;
 		int i = 0;
