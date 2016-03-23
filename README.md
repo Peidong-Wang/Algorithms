@@ -6,4 +6,4 @@ This repository contains some algorithm implementations. The contents are as fol
 
 2. K Nearest Neighbors Classifier. Containing only 1-NN and 3-NN. Written with MATLAB.
 
-Latest Update Date: 23/03/2016
+Latest Update Date: 03/23/2016
